@@ -1,48 +1,29 @@
-# App Streamlit — Passos Mágicos (Fase 4 do Datathon)
+# App Streamlit — Passos Mágicos (Datathon Fase 5)
 
-## O que tem aqui dentro
+Aplicativo da Fase 4 do Datathon: carrega o modelo preditivo do grupo e estima
+a probabilidade de um aluno da Passos Mágicos entrar em risco de defasagem.
 
-- `app.py` — o aplicativo em si (a tela que as pessoas vão ver e usar).
-- `modelo_provisorio.pkl` — o modelo treinado que o app carrega (PROVISÓRIO,
-  só para testarmos o processo até a Thaty terminar o modelo real).
-- `requirements.txt` — lista das bibliotecas que o app precisa para rodar.
-- `train_model.py` — script que treinou o modelo provisório (não precisa
-  rodar de novo, só serve caso a gente precise treinar outra versão).
-- `dataset_treino.csv` — a base de dados usada para treinar o modelo provisório.
+## Arquivos
 
-## Como testar no seu computador (antes de publicar)
+- `app.py` — aplicativo Streamlit.
+- `modelo_provisorio.pkl` — modelo atualmente em uso (treinado com a base da
+  Fase 1/2, enquanto o modelo definitivo da Fase 3 não fica pronto).
+- `train_model.py` — script de treino do modelo.
+- `dataset_treino.csv` — base usada no treino.
+- `requirements.txt` — dependências do projeto.
 
-1. Abra o **Terminal**.
-2. Entre na pasta do projeto (troque o caminho pelo lugar onde você salvou):
-   ```
-   cd caminho/para/passos-magicos-app
-   ```
-3. Instale as bibliotecas necessárias:
-   ```
-   pip3 install -r requirements.txt
-   ```
-4. Rode o aplicativo:
-   ```
-   streamlit run app.py
-   ```
-5. Uma aba deve abrir sozinha no seu navegador, com o app funcionando.
-   Para parar, volte ao Terminal e aperte `Control + C`.
+## Rodando localmente
 
-## Como publicar (deploy) no Streamlit Community Cloud
+```
+pip3 install -r requirements.txt
+streamlit run app.py
+```
 
-1. Suba essa pasta inteira para um repositório novo no GitHub.
-2. Entre em share.streamlit.io, clique em **"Create app"**.
-3. Escolha o repositório que você criou, e em "Main file path" escreva `app.py`.
-4. Clique em **Deploy**. Em alguns minutos o app estará no ar com um link público.
+## Deploy
 
-## Quando a Thaty terminar o modelo real
+Publicado no Streamlit Community Cloud, com `app.py` como arquivo principal.
 
-1. Substitua o arquivo `modelo_provisorio.pkl` pelo arquivo do modelo dela
-   (pode manter o mesmo nome de arquivo, ou trocar o nome no `app.py`,
-   na linha `joblib.load("modelo_provisorio.pkl")`).
-2. Confira quais colunas (indicadores) o modelo dela espera receber — se
-   forem diferentes das usadas aqui, ajuste a lista `FEATURES` e os campos
-   do formulário em `app.py`.
-3. Teste local de novo (`streamlit run app.py`) antes de subir a
-   atualização para o GitHub (o Streamlit Cloud atualiza o app publicado
-   sozinho sempre que você atualiza o repositório).
+## Próximos passos
+
+Substituir `modelo_provisorio.pkl` pelo modelo final da Fase 3 e ajustar as
+variáveis de entrada em `app.py` caso as colunas usadas sejam diferentes.
