@@ -1,41 +1,59 @@
 """
-Treino do modelo provisório de risco de defasagem.
+Treino do modelo de risco, reproduzido a partir do notebook "Limpeza,
+organização e padronização + Modelo de Machine Learning (Pergunta 9)".
 
-Usado enquanto o modelo definitivo da Fase 3 não é concluído. Ao ser
-substituído, basta trocar o arquivo modelo_provisorio.pkl e ajustar as
-FEATURES em app.py caso as colunas de entrada mudem.
+Modelo: XGBoost. Target: Em_Risco_Vigente (1 se IDA < 6.0 OU IEG < 6.0 OU
+pedra do ciclo atual == 'Quartzo'). IAN não é usado como feature (evita
+data leakage, já que é derivado da própria defasagem histórica).
 
 Uso: python3 train_model.py
+Gera: modelo_xgb_passos_magicos.pkl
 """
 
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report
+from xgboost import XGBClassifier
+from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score, roc_auc_score
 import joblib
 
 df = pd.read_csv("dataset_treino.csv")
 
-# IAN foi deixado de fora por ser praticamente equivalente à Defasagem
-# (causaria vazamento de dados).
-FEATURES = ["IDA", "IEG", "IAA", "IPS", "IPP", "IPV", "INDE_ano_atual", "Mat", "Por"]
-
-# Alvo: aluno considerado em risco quando Defasagem < 0 (abaixo da fase ideal).
-df["em_risco"] = (df["Defasagem"] < 0).astype(int)
-
-X = df[FEATURES]
-y = df["em_risco"]
-
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
+df["Em_Risco_Vigente"] = np.where(
+    (df["IDA"] < 6.0) | (df["IEG"] < 6.0) | (df["pedra_ano_atual"] == "Quartzo"),
+    1, 0,
 )
 
-modelo = RandomForestClassifier(n_estimators=200, max_depth=6, random_state=42)
-modelo.fit(X_train, y_train)
+COLUNAS = [
+    "Fase", "Gênero", "Instituição de ensino",
+    "IDA", "IEG", "IAA", "IPS", "IPP", "IPV", "Mat", "Por",
+    "Em_Risco_Vigente",
+]
+df_ml = df[COLUNAS].copy()
 
-y_pred = modelo.predict(X_test)
-print("Acurácia (teste):", accuracy_score(y_test, y_pred))
-print(classification_report(y_test, y_pred))
+X = df_ml.drop(columns=["Em_Risco_Vigente"])
+y = df_ml["Em_Risco_Vigente"]
 
-joblib.dump({"modelo": modelo, "features": FEATURES}, "modelo_provisorio.pkl")
-print("Modelo salvo em modelo_provisorio.pkl")
+X_encoded = pd.get_dummies(X, drop_first=True)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X_encoded, y, test_size=0.20, random_state=42, stratify=y
+)
+
+modelo_xgb = XGBClassifier(n_estimators=100, learning_rate=0.1, random_state=42, eval_metric="logloss")
+modelo_xgb.fit(X_train, y_train)
+
+y_pred = modelo_xgb.predict(X_test)
+y_proba = modelo_xgb.predict_proba(X_test)[:, 1]
+
+print(f"Acurácia: {accuracy_score(y_test, y_pred):.4f}")
+print(f"Recall (Em Risco): {recall_score(y_test, y_pred):.4f}")
+print(f"Precision (Em Risco): {precision_score(y_test, y_pred):.4f}")
+print(f"F1-Score: {f1_score(y_test, y_pred):.4f}")
+print(f"ROC-AUC: {roc_auc_score(y_test, y_proba):.4f}")
+
+joblib.dump(
+    {"modelo_xgb": modelo_xgb, "colunas_treino": list(X_encoded.columns)},
+    "modelo_xgb_passos_magicos.pkl",
+)
+print("Modelo salvo em modelo_xgb_passos_magicos.pkl")

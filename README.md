@@ -1,16 +1,27 @@
-# App Streamlit — Passos Mágicos (Datathon Fase 5)
+# App Streamlit - Passos Mágicos (Datathon Fase 5)
 
-Aplicativo da Fase 4 do Datathon: carrega o modelo preditivo do grupo e estima
-a probabilidade de um aluno da Passos Mágicos entrar em risco de defasagem.
+Aplicativo que carrega o modelo preditivo do grupo e estima a probabilidade
+de um aluno da Passos Mágicos entrar em risco no ciclo atual
+(`Em_Risco_Vigente`).
+
+## Modelo
+
+XGBoost, treinado pela equipe (notebook "Limpeza, organização e
+padronização + Modelo de Machine Learning - Pergunta 9"). Métricas no
+conjunto de teste: acurácia 99,65%, recall 99,12%, precisão 100%.
+
+Indicadores usados: IDA, IEG, IAA, IPS, IPP, IPV, Mat, Por, Gênero,
+Instituição de ensino, Fase (IAN não é usado, para evitar data leakage).
+
+Régua de risco: >= 70% risco alto, 40-69% risco moderado, < 40% sem risco.
 
 ## Arquivos
 
-- `app.py` — aplicativo Streamlit.
-- `modelo_provisorio.pkl` — modelo atualmente em uso (treinado com a base da
-  Fase 1/2, enquanto o modelo definitivo da Fase 3 não fica pronto).
-- `train_model.py` — script de treino do modelo.
-- `dataset_treino.csv` — base usada no treino.
-- `requirements.txt` — dependências do projeto.
+- `app.py` - aplicativo Streamlit.
+- `modelo_xgb_passos_magicos.pkl` - modelo treinado + lista de colunas do treino.
+- `train_model.py` - script que reproduz o treino do modelo.
+- `dataset_treino.csv` - base usada no treino.
+- `requirements.txt` - dependências do projeto.
 
 ## Rodando localmente
 
@@ -22,8 +33,4 @@ streamlit run app.py
 ## Deploy
 
 Publicado no Streamlit Community Cloud, com `app.py` como arquivo principal.
-
-## Próximos passos
-
-Substituir `modelo_provisorio.pkl` pelo modelo final da Fase 3 e ajustar as
-variáveis de entrada em `app.py` caso as colunas usadas sejam diferentes.
+Atualiza automaticamente a cada push no repositório.
