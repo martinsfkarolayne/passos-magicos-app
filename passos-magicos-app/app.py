@@ -56,9 +56,28 @@ with col2:
     por = st.number_input("Nota de Português", 0.0, 10.0, ida)
 
 genero = st.selectbox("Gênero", ["Feminino", "Masculino"])
-# Opções alinhadas às categorias usadas no treino do modelo (train_model.py).
+# Categorias brutas exatamente como aparecem na base de treino (mesmas 10
+# variações usadas para gerar as colunas one-hot do modelo). "Concluiu o 3º
+# EM" é a categoria-base do encoding (drop_first=True) e por isso não tem
+# coluna própria — selecioná-la deixa todas as colunas de instituição em 0,
+# o que é o comportamento correto. As duas variações de "Programa de
+# Apadrinhamento" (com A/a maiúscula/minúscula) existem porque a base bruta
+# tem essa inconsistência de digitação; o modelo aprendeu as duas como
+# colunas separadas, então mantemos ambas aqui.
 instituicao = st.selectbox(
-    "Instituição de Ensino", ["Escola Pública", "Rede Decisão", "Privada", "Outra"]
+    "Instituição de Ensino",
+    [
+        "Escola Pública",
+        "Rede Decisão",
+        "Privada",
+        "Privada - Programa de Apadrinhamento",
+        "Privada - Programa de apadrinhamento",
+        "Privada *Parcerias com Bolsa 100%",
+        "Pública",
+        "Escola JP II",
+        "Nenhuma das opções acima",
+        "Concluiu o 3º EM",
+    ],
 )
 fase = st.selectbox("Fase", ["0", "1", "2", "3", "4", "5", "6", "7", "ALFA"])
 
