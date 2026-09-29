@@ -1,9 +1,11 @@
+import os
 import streamlit as st
 import pandas as pd
 import joblib
 
 # 1. Carrega modelo e colunas salvas
-dados_app = joblib.load("modelo_xgb_passos_magicos.pkl")
+PASTA_ATUAL = os.path.dirname(os.path.abspath(__file__))
+dados_app = joblib.load(os.path.join(PASTA_ATUAL, "modelo_xgb_passos_magicos.pkl"))
 modelo = dados_app["modelo_xgb"]
 colunas_treino = dados_app["colunas_treino"]
 
