@@ -1,26 +1,26 @@
 """
 App Streamlit - Datathon (Case Passos Mágicos)
 
-Carrega o modelo treinado (XGBoost) e estima a probabilidade de um aluno
-entrar em risco no ciclo atual (Em_Risco_Vigente), a partir dos
-indicadores informados.
+Formulário e lógica de predição conforme o guia de integração da Thaty
+("Orientações para Streamlit" - Fase 3, modelo preditivo). Carrega o
+modelo treinado (XGBoost) e estima a probabilidade de um aluno entrar em
+risco no ciclo atual (Em_Risco_Vigente), a partir dos indicadores
+informados.
 """
 
 import streamlit as st
 import pandas as pd
 import joblib
 
-st.set_page_config(
-    page_title="Passos Mágicos - Risco de Defasagem",
-    page_icon="✨",
-    layout="centered",
-)
+# 1. Carrega modelo e colunas salvas
+dados_app = joblib.load("modelo_xgb_passos_magicos.pkl")
+modelo = dados_app["modelo_xgb"]
+colunas_treino = dados_app["colunas_treino"]
 
-st.title("✨ Passos Mágicos")
-st.subheader("Diagnóstico preditivo de risco (ciclo atual)")
+st.title("🛡️ Diagnóstico Preditivo de Risco — Passos Mágicos")
 
 st.write(
-    "Preencha os indicadores do aluno abaixo e clique em **Calcular risco** "
+    "Preencha os indicadores do aluno abaixo e clique em **Calcular Risco** "
     "para estimar a probabilidade dele entrar em risco no ciclo atual."
 )
 
@@ -38,45 +38,38 @@ with st.expander("O que significa cada indicador?"):
         "própria defasagem escolar, o que enviesaria a previsão."
     )
 
-@st.cache_resource
-def carregar_modelo():
-    dados = joblib.load("modelo_xgb_passos_magicos.pkl")
-    return dados["modelo_xgb"], dados["colunas_treino"]
-
-modelo, colunas_treino = carregar_modelo()
-
-st.markdown("### Indicadores do aluno")
-st.caption("Indicadores numéricos em escala de 0 a 10.")
-
+# 2. Formulário
 col1, col2 = st.columns(2)
 
 with col1:
-    ida = st.slider("IDA - Desempenho acadêmico", 0.0, 10.0, 6.5, 0.1)
-    ieg = st.slider("IEG - Engajamento", 0.0, 10.0, 7.0, 0.1)
-    iaa = st.slider("IAA - Autoavaliação", 0.0, 10.0, 8.0, 0.1)
-    ips = st.slider("IPS - Psicossocial", 0.0, 10.0, 6.0, 0.1)
+    ida = st.number_input("IDA (Desempenho)", 0.0, 10.0, 6.5)
+    ieg = st.number_input("IEG (Engajamento)", 0.0, 10.0, 7.0)
+    iaa = st.number_input("IAA (Autoavaliação)", 0.0, 10.0, 8.0)
+    ips = st.number_input("IPS (Psicossocial)", 0.0, 10.0, 6.0)
 
 with col2:
-    ipp = st.slider("IPP - Psicopedagógico", 0.0, 10.0, 7.0, 0.1)
-    ipv = st.slider("IPV - Ponto de virada", 0.0, 10.0, 7.5, 0.1)
+    ipp = st.number_input("IPP (Psicopedagógico)", 0.0, 10.0, 7.0)
+    ipv = st.number_input("IPV (Ponto de Virada)", 0.0, 10.0, 7.5)
     # Se o usuário não ajustar Matemática/Português, o valor acompanha o IDA
     # (regra definida pela equipe para o caso de nota não informada).
-    mat = st.slider("Nota de Matemática", 0.0, 10.0, ida, 0.1)
-    por = st.slider("Nota de Português", 0.0, 10.0, ida, 0.1)
+    mat = st.number_input("Nota de Matemática", 0.0, 10.0, ida)
+    por = st.number_input("Nota de Português", 0.0, 10.0, ida)
 
 genero = st.selectbox("Gênero", ["Feminino", "Masculino"])
+# Opções alinhadas às categorias usadas no treino do modelo (train_model.py).
 instituicao = st.selectbox(
-    "Instituição de ensino", ["Escola Pública", "Rede Decisão", "Privada", "Outra"]
+    "Instituição de Ensino", ["Escola Pública", "Rede Decisão", "Privada", "Outra"]
 )
 fase = st.selectbox("Fase", ["0", "1", "2", "3", "4", "5", "6", "7", "ALFA"])
 
-if st.button("Calcular risco", type="primary"):
-    entrada = {
+# 3. Predição
+if st.button("Calcular Risco"):
+    dados_input = {
         "IDA": ida,
         "IEG": ieg,
         "IAA": iaa,
         "IPS": ips,
-        "IPP": min(max(ipp, 0.0), 10.0),  # trava de segurança
+        "IPP": min(max(ipp, 0.0), 10.0),
         "IPV": ipv,
         "Mat": mat,
         "Por": por,
@@ -85,10 +78,10 @@ if st.button("Calcular risco", type="primary"):
         "Fase": fase,
     }
 
-    df_raw = pd.DataFrame([entrada])
+    df_raw = pd.DataFrame([dados_input])
     df_encoded = pd.get_dummies(df_raw).astype(int)
 
-    # Garante a mesma estrutura de colunas usada no treino
+    # Garante estrutura idêntica de colunas do treino
     df_final = pd.DataFrame(0, index=[0], columns=colunas_treino)
     for col in df_encoded.columns:
         if col in df_final.columns:
@@ -96,20 +89,17 @@ if st.button("Calcular risco", type="primary"):
     # .astype(int) trunca os indicadores numéricos (6.5 viraria 6); repõe os
     # valores originais com casas decimais depois do alinhamento de colunas.
     for num_col in ["IDA", "IEG", "IAA", "IPS", "IPP", "IPV", "Mat", "Por"]:
-        df_final[num_col] = entrada[num_col]
+        df_final[num_col] = dados_input[num_col]
 
-    probabilidade = modelo.predict_proba(df_final)[0][1]
-    percentual = probabilidade * 100
+    prob_risco = modelo.predict_proba(df_final)[0][1]
 
-    st.markdown("### Resultado")
-    st.metric("Probabilidade de risco", f"{percentual:.1f}%")
-
-    if percentual >= 70:
-        st.error("🚨 Alto risco - encaminhar para suporte psicopedagógico e reforço.")
-    elif percentual >= 40:
-        st.warning("⚠️ Risco moderado - alerta preventivo de engajamento e assiduidade.")
+    st.subheader(f"Probabilidade de Risco: {prob_risco * 100:.1f}%")
+    if prob_risco >= 0.70:
+        st.error("🚨 Alto Risco: Intervenção psicopedagógica urgente recomendada.")
+    elif prob_risco >= 0.40:
+        st.warning("⚠️ Risco Moderado: Monitorar engajamento e assiduidade.")
     else:
-        st.success("✅ Sem risco - aluno no fluxo regular de aprendizado.")
+        st.success("✅ Aluno Seguro: Desempenho dentro da média esperada.")
 
 st.divider()
 st.caption("Datathon Fase 5 · Pós-graduação FIAP · Case Passos Mágicos")
