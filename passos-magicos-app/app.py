@@ -1,13 +1,3 @@
-"""
-App Streamlit - Datathon (Case Passos Mágicos)
-
-Formulário e lógica de predição conforme o guia de integração da Thaty
-("Orientações para Streamlit" - Fase 3, modelo preditivo). Carrega o
-modelo treinado (XGBoost) e estima a probabilidade de um aluno entrar em
-risco no ciclo atual (Em_Risco_Vigente), a partir dos indicadores
-informados.
-"""
-
 import streamlit as st
 import pandas as pd
 import joblib
@@ -26,16 +16,16 @@ st.write(
 
 with st.expander("O que significa cada indicador?"):
     st.markdown(
-        "- **IDA**: desempenho do aluno nas avaliações acadêmicas realizadas pela Passos Mágicos.\n"
-        "- **IEG**: nível de participação e envolvimento do aluno nas atividades propostas.\n"
-        "- **IAA**: como o próprio aluno percebe seu desempenho e evolução.\n"
-        "- **IPS**: aspectos emocionais e sociais que podem impactar o aprendizado.\n"
-        "- **IPP**: resultado das avaliações psicopedagógicas feitas com o aluno.\n"
-        "- **IPV**: o quanto o aluno já avançou rumo à transformação que o programa busca.\n"
-        "- **Mat / Por**: notas do aluno nas avaliações de Matemática e Português.\n"
-        "- **Fase**: fase atual do aluno dentro do programa (0 a 7, ou ALFA).\n\n"
-        "O modelo não usa o indicador IAN, pois ele é calculado a partir da "
-        "própria defasagem escolar, o que enviesaria a previsão."
+        "- **IDA**: desempenho do aluno nas avaliações acadêmicas.\n"
+        "- **IEG**: participação e engajamento nas atividades.\n"
+        "- **IAA**: autoavaliação do próprio aluno.\n"
+        "- **IPS**: aspectos emocionais e sociais.\n"
+        "- **IPP**: avaliação psicopedagógica.\n"
+        "- **IPV**: quanto o aluno já avançou no programa.\n"
+        "- **Mat / Por**: notas de Matemática e Português.\n"
+        "- **Fase**: fase atual do aluno no programa.\n\n"
+        "O IAN não entra no modelo porque é calculado a partir da própria "
+        "defasagem escolar, o que enviesaria a previsão."
     )
 
 # 2. Formulário
@@ -50,20 +40,10 @@ with col1:
 with col2:
     ipp = st.number_input("IPP (Psicopedagógico)", 0.0, 10.0, 7.0)
     ipv = st.number_input("IPV (Ponto de Virada)", 0.0, 10.0, 7.5)
-    # Se o usuário não ajustar Matemática/Português, o valor acompanha o IDA
-    # (regra definida pela equipe para o caso de nota não informada).
     mat = st.number_input("Nota de Matemática", 0.0, 10.0, ida)
     por = st.number_input("Nota de Português", 0.0, 10.0, ida)
 
 genero = st.selectbox("Gênero", ["Feminino", "Masculino"])
-# Categorias brutas exatamente como aparecem na base de treino (mesmas 10
-# variações usadas para gerar as colunas one-hot do modelo). "Concluiu o 3º
-# EM" é a categoria-base do encoding (drop_first=True) e por isso não tem
-# coluna própria - selecioná-la deixa todas as colunas de instituição em 0,
-# o que é o comportamento correto. As duas variações de "Programa de
-# Apadrinhamento" (com A/a maiúscula/minúscula) existem porque a base bruta
-# tem essa inconsistência de digitação; o modelo aprendeu as duas como
-# colunas separadas, então mantemos ambas aqui.
 instituicao = st.selectbox(
     "Instituição de Ensino",
     [
@@ -105,8 +85,6 @@ if st.button("Calcular Risco"):
     for col in df_encoded.columns:
         if col in df_final.columns:
             df_final[col] = df_encoded[col]
-    # .astype(int) trunca os indicadores numéricos (6.5 viraria 6); repõe os
-    # valores originais com casas decimais depois do alinhamento de colunas.
     for num_col in ["IDA", "IEG", "IAA", "IPS", "IPP", "IPV", "Mat", "Por"]:
         df_final[num_col] = dados_input[num_col]
 
