@@ -17,7 +17,7 @@ dados_app = joblib.load("modelo_xgb_passos_magicos.pkl")
 modelo = dados_app["modelo_xgb"]
 colunas_treino = dados_app["colunas_treino"]
 
-st.title("🛡️ Diagnóstico Preditivo de Risco — Passos Mágicos")
+st.title("🛡️ Diagnóstico Preditivo de Risco - Passos Mágicos")
 
 st.write(
     "Preencha os indicadores do aluno abaixo e clique em **Calcular Risco** "
@@ -59,7 +59,7 @@ genero = st.selectbox("Gênero", ["Feminino", "Masculino"])
 # Categorias brutas exatamente como aparecem na base de treino (mesmas 10
 # variações usadas para gerar as colunas one-hot do modelo). "Concluiu o 3º
 # EM" é a categoria-base do encoding (drop_first=True) e por isso não tem
-# coluna própria — selecioná-la deixa todas as colunas de instituição em 0,
+# coluna própria - selecioná-la deixa todas as colunas de instituição em 0,
 # o que é o comportamento correto. As duas variações de "Programa de
 # Apadrinhamento" (com A/a maiúscula/minúscula) existem porque a base bruta
 # tem essa inconsistência de digitação; o modelo aprendeu as duas como
